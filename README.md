@@ -12,43 +12,70 @@ Step 1: Import Necessary Libraries
 
 Import all necessary libraries needed for the project. YOLO is used for object detection, cv2, and cvzone are used for image processing, and Sort is a simple online real-time tracking (SORT) algorithm.
 
-![image](https://github.com/GeodeZister/YOLO_CarCounter_with_cv2./assets/97829206/286f21e0-a7cd-4d94-9ef5-92f3f6052521)
+<pre>
+import numpy as np
+from ultralytics import YOLO
+import cv2
+import cvzone
+import math
+import time
+from sort import*
+</pre>
 
 Step 2: Initialize Variables and Load Model
 
 Here we initialize the video capture, load the YOLO model for object detection, and define the line across which the cars will be counted. We also create an empty list to store the IDs of the counted vehicles.
 
-![image](https://github.com/GeodeZister/YOLO_CarCounter_with_cv2./assets/97829206/125559ea-26f8-477e-8569-13457d0e7611)
+<pre>cap = cv2.VideoCapture("../CarProject/traffic.mp4")
+limits = [350,350, 950, 350]
+totalCount = []
+model = YOLO("../CarProject/yolov8l.pt")
+</pre>
 
 Step 3: Initialize Tracker
 
 Initialize the SORT object tracker.
-
-![image](https://github.com/GeodeZister/YOLO_CarCounter_with_cv2./assets/97829206/e8c83d22-d68d-493e-a546-dceae6a8f2fc)
+<pre>tracker = Sort(max_age=30, min_hits=2, iou_threshold=0.3)
+</pre>
 
 Step 4: Frame Capture and Processing
 
 Capture the current frame, feed it to the YOLO model for object detection, and initialize the detection list.
+<pre>
+new_frame_time = time.time()
+success, img = cap.read()
+results = model(img, stream=True)
+detections = np.empty((0,5))
 
-![image](https://github.com/GeodeZister/YOLO_CarCounter_with_cv2./assets/97829206/d401237c-a46b-45a0-aa6e-c9491f0ba398)
+</pre>
 
 Step 5: Process Detected Objects
 
 For each object detected by the YOLO model, process the bounding boxes, calculate confidence scores, and filter objects based on class and confidence score. Valid objects are added to the detections list.
 
-![image](https://github.com/GeodeZister/YOLO_CarCounter_with_cv2./assets/97829206/d7280aa8-5523-4dcf-a371-d2ed375b4829)
+<pre>
+  for r in results:
+    boxes = r.boxes
+    for box in boxes:
+        # code for processing each box and adding valid objects to detections list
+</pre>
 
 Step 6:  Object Tracking
 
 Feed the detections to the SORT tracker to get the tracking results and draw the line where the count takes place.
 
-![image](https://github.com/GeodeZister/YOLO_CarCounter_with_cv2./assets/97829206/a1d0e848-83ef-4bdf-a782-a38d8bb9c68e)
+<pre>
+resultsTracker = tracker.update(detections)
+cv2.line(img,(limits[0],limits[1]),(limits[2], limits[3]),(0,0,255),2)
+</pre>
 
 Step 7: Display Result and Loop
 
 Display the count on the frame, show the frame in a window, and wait for a key event. Loop back to Step 4.
 
-![image](https://github.com/GeodeZister/YOLO_CarCounter_with_cv2./assets/97829206/a0ce63f0-2f4c-4b3e-8b3a-66d5d9d5eba3)
-
+<pre>cvzone.putTextRect(img, f'Count: {len(totalCount)}', (50, 50), scale=3, thickness=4, colorR=(0, 0, 0), offset=5)
+cv2.imshow("Image", img)
+cv2.waitKey(1)
+</pre>
 
 
